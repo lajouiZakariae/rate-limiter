@@ -11,7 +11,15 @@ class RateLimiter
         if (!is_dir($storage_path)) mkdir($storage_path);
     }
 
-    public function limit(string $key, int $perMinute)
+    /**
+     * Register a rate limiter with a limit per minute
+     *
+     * @param string $key
+     * @param int $perMinute
+     * 
+     * @return void
+     */
+    public function limit(string $key, int $perMinute): void
     {
         $hashedKey = md5($key);
 
@@ -24,6 +32,14 @@ class RateLimiter
         }
     }
 
+    /**
+     * Increments the Rate
+     *
+     * @param string $key
+     * 
+     * @return void
+     * @throws Exception
+     */
     public function hit(string $key): void
     {
         $hashedKey = md5($key);
