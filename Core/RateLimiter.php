@@ -2,6 +2,8 @@
 
 namespace Core;
 
+use Core\Exceptions\InvalideRateLimiterException;
+use Core\Exceptions\TooManyHitsException;
 use Exception;
 
 class RateLimiter
@@ -45,7 +47,7 @@ class RateLimiter
         $hashedKey = md5($key);
         $keyFilePath = $this->storage_path . '/' . $hashedKey;
 
-        if (!is_file($keyFilePath)) throw new Exception("Invalid Rate Limiter Key");
+        if (!is_file($keyFilePath)) throw new InvalideRateLimiterException();
 
         [$numberOfHits, $maximum, $startedTime, $endTime] = array_map(fn ($paramAsString) => intval($paramAsString), explode('|', file_get_contents($keyFilePath)));
 
@@ -55,7 +57,7 @@ class RateLimiter
             $endTime = time() + 60;
         };
 
-        if ($numberOfHits >= $maximum) throw new Exception('Maximum of Hits Reached!');
+        if ($numberOfHits >= $maximum) throw new TooManyHitsException();
 
         $numberOfHits++;
 
