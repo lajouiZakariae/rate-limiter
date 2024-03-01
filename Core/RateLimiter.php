@@ -40,7 +40,7 @@ class RateLimiter
      * @param string $key
      * 
      * @return void
-     * @throws Exception
+     * @throws TooManyHitsException|InvalideRateLimiterException
      */
     public function hit(string $key): void
     {
