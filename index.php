@@ -4,7 +4,7 @@ use Core\RateLimiter;
 
 require "vendor/autoload.php";
 
-$rateLimiter = new RateLimiter("app/cache");
+$rateLimiter = new RateLimiter("storage/cache");
 
 $rateLimiter->limit('user', 5);
 

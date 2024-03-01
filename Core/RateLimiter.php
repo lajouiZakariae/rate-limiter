@@ -4,7 +4,6 @@ namespace Core;
 
 use Core\Exceptions\InvalideRateLimiterException;
 use Core\Exceptions\TooManyHitsException;
-use Exception;
 
 class RateLimiter
 {
