@@ -1,0 +1,4 @@
+/vendor/
+config.php
+*.log
+product_manager_php-main
