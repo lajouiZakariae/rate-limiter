@@ -46,7 +46,5 @@ class RateLimiter
         $fileContent = $numberOfHits . '|' . $maximum . '|' . $startedTime . '|' . $endTime;
 
         file_put_contents($keyFilePath, $fileContent);
-
-        dd($numberOfHits, $maximum, $startedTime, $endTime);
     }
 }
