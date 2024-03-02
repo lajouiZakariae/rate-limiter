@@ -112,6 +112,13 @@ class RateLimiter
         return $props->numberOfHits === $props->maximum;
     }
 
+    /**
+     * 
+     * @param string $keyFilePath
+     * 
+     * @return void
+     * 
+     */
     private function checkKeyExistance(string $keyFilePath): void
     {
         if (!is_file($keyFilePath)) throw new InvalideRateLimiterException();
