@@ -103,6 +103,16 @@ class RateLimiter
         file_put_contents($keyFilePath, $this->encodeKeyContent($props));
     }
 
+    public function destroy(string $key): void
+    {
+        $hashedKey = md5($key);
+        $keyFilePath = $this->storage_path . '/' . $hashedKey;
+
+        $this->checkKeyExistance($keyFilePath);
+
+        unlink($keyFilePath);
+    }
+
     private function encodeKeyContent(object $props): string
     {
         $string = $props->numberOfHits .
