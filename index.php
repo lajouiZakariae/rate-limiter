@@ -16,4 +16,5 @@ try {
 
 if ($rateLimiter->tooManyAttempts('user')) {
     echo 'yeeee';
+    $rateLimiter->clear('user');
 }

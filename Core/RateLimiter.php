@@ -66,6 +66,43 @@ class RateLimiter
         file_put_contents($keyFilePath, $fileContent);
     }
 
+    /**
+     * Wheter the rate limiter reached the limit or not
+     *
+     * @param string $key
+     * 
+     * @return bool
+     * 
+     */
+    public function tooManyAttempts(string $key): bool
+    {
+        $hashedKey = md5($key);
+
+        $keyFilePath = $this->storage_path . '/' . $hashedKey;
+
+        $this->checkKeyExistance($keyFilePath);
+
+        $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
+
+        return $props->numberOfHits === $props->maximum;
+    }
+
+    public function clear(string $key): void
+    {
+        $hashedKey = md5($key);
+        $keyFilePath = $this->storage_path . '/' . $hashedKey;
+
+        $this->checkKeyExistance($keyFilePath);
+
+        $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
+
+        $props->numberOfHits = 0;
+        $props->startedTime = time();
+        $props->endTime = time() + 60;
+
+        file_put_contents($keyFilePath, $this->encodeKeyContent($props));
+    }
+
     private function encodeKeyContent(object $props): string
     {
         $string = $props->numberOfHits .
@@ -89,27 +126,6 @@ class RateLimiter
         $props->endTime = $endTime;
 
         return $props;
-    }
-
-    /**
-     * Wheter the rate limiter reached the limit or not
-     *
-     * @param string $key
-     * 
-     * @return bool
-     * 
-     */
-    public function tooManyAttempts(string $key): bool
-    {
-        $hashedKey = md5($key);
-
-        $keyFilePath = $this->storage_path . '/' . $hashedKey;
-
-        $this->checkKeyExistance($keyFilePath);
-
-        $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
-
-        return $props->numberOfHits === $props->maximum;
     }
 
     /**
