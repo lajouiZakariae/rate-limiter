@@ -84,6 +84,14 @@ class RateLimiter
 
         $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
 
+        if ($props->endTime <= time()) {
+            $props->numberOfHits = 0;
+            $props->startedTime = time();
+            $props->endTime = time() + 60;
+
+            file_put_contents($keyFilePath, $this->encodeKeyContent($props));
+        }
+
         return $props->numberOfHits === $props->maximum;
     }
 
