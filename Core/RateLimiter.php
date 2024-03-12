@@ -10,7 +10,7 @@ class RateLimiter
 {
     public function __construct(private string $storage_path)
     {
-        if (!is_dir($storage_path)) mkdir($storage_path);
+        if (!is_dir($storage_path)) mkdir($storage_path, recursive: true);
     }
 
     /**
@@ -21,17 +21,22 @@ class RateLimiter
      * 
      * @return void
      */
-    public function limit(string $key, int $perMinute): void
+    public function limit(string $key, int $timesPerPeriod, int $period = 60): void
     {
         $hashedKey = md5($key);
 
         $keyFilePath = $this->storage_path . '/' . $hashedKey;
 
         if (!is_file($keyFilePath)) {
-            $fileContent = 0 . '|' . $perMinute . '|' . time() . '|' . time() + 60;
+            $fileContent = 0 . '|' . $timesPerPeriod . '|' . time() . '|' . time() + $period;
 
             file_put_contents($keyFilePath, $fileContent);
         }
+    }
+
+    public function limitHourly(string $key, int $perHour): void
+    {
+        $this->limit($key, $perHour, 3600);
     }
 
     /**
