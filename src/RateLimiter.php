@@ -1,9 +1,9 @@
 <?php
 
-namespace Core;
+namespace RateLimiter;
 
-use Core\Exceptions\InvalideRateLimiterException;
-use Core\Exceptions\TooManyHitsException;
+use RateLimiter\Exceptions\InvalideRateLimiterException;
+use RateLimiter\Exceptions\TooManyHitsException;
 use stdClass;
 
 class RateLimiter
@@ -14,7 +14,7 @@ class RateLimiter
     }
 
     /**
-     * Register a rate limiter with a limit per minute
+     * Register a key with a limit per minute
      *
      * @param string $key
      * @param int $perMinute
@@ -126,6 +126,18 @@ class RateLimiter
         unlink($keyFilePath);
     }
 
+    /**
+     * 
+     * @param string $keyFilePath
+     * 
+     * @return void
+     * 
+     */
+    private function checkKeyExistance(string $keyFilePath): void
+    {
+        if (!is_file($keyFilePath)) throw new InvalideRateLimiterException();
+    }
+
     private function encodeKeyContent(object $props): string
     {
         $string = $props->numberOfHits .
@@ -149,17 +161,5 @@ class RateLimiter
         $props->endTime = $endTime;
 
         return $props;
-    }
-
-    /**
-     * 
-     * @param string $keyFilePath
-     * 
-     * @return void
-     * 
-     */
-    private function checkKeyExistance(string $keyFilePath): void
-    {
-        if (!is_file($keyFilePath)) throw new InvalideRateLimiterException();
     }
 }

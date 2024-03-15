@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Exceptions;
+namespace RateLimiter\Exceptions;
 
 use Exception;
 
