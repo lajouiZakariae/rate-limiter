@@ -2,15 +2,21 @@
 
 namespace RateLimiter;
 
+use Exception;
 use RateLimiter\Exceptions\InvalideRateLimiterException;
 use RateLimiter\Exceptions\TooManyHitsException;
+use RateLimiter\Interfaces\IStorage;
 use stdClass;
 
 class RateLimiter
 {
-    public function __construct(private string $storage_path)
+    private IStorage $storage;
+
+    public function __construct(array $storageSettings)
     {
-        if (!is_dir($storage_path)) mkdir($storage_path, recursive: true);
+        if (!isset($storageSettings['storage'])) throw new Exception('The Storage Type is Required');
+
+        if ($storageSettings['storage'] === 'file') $this->storage = new FileStorage($storageSettings['path']);
     }
 
     /**
@@ -25,12 +31,10 @@ class RateLimiter
     {
         $hashedKey = md5($key);
 
-        $keyFilePath = $this->storage_path . '/' . $hashedKey;
+        if ($this->storage->missing($hashedKey)) {
+            $fileContent = 0 . '|' . $timesPerPeriod . '|' . time() . '|' . time() + $period . '|' . $period;
 
-        if (!is_file($keyFilePath)) {
-            $fileContent = 0 . '|' . $timesPerPeriod . '|' . time() . '|' . time() + $period;
-
-            file_put_contents($keyFilePath, $fileContent);
+            $this->storage->set($hashedKey, $fileContent);
         }
     }
 
@@ -47,28 +51,27 @@ class RateLimiter
      * @return void
      * @throws TooManyHitsException|InvalideRateLimiterException
      */
-    public function hit(string $key): void
+    public function hit(string $key, int $times = 0): void
     {
         $hashedKey = md5($key);
-        $keyFilePath = $this->storage_path . '/' . $hashedKey;
 
-        $this->checkKeyExistance($keyFilePath);
+        $this->checkKeyExistance($hashedKey);
 
-        $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
+        $props = $this->decodeKeyContent($this->storage->get($hashedKey));
 
         if ($props->endTime < time()) {
             $props->numberOfHits = 0;
             $props->startedTime = time();
-            $props->endTime = time() + 60;
+            $props->endTime = time() + (int)$props->period;
         };
 
-        if ($props->numberOfHits >= $props->maximum) throw new TooManyHitsException();
+        $props->numberOfHits = $props->numberOfHits + $times;
 
-        $props->numberOfHits++;
+        if ($props->numberOfHits > $props->maximum) throw new TooManyHitsException();
 
         $fileContent = $this->encodeKeyContent($props);
 
-        file_put_contents($keyFilePath, $fileContent);
+        $this->storage->set($hashedKey, $fileContent);
     }
 
     /**
@@ -83,18 +86,16 @@ class RateLimiter
     {
         $hashedKey = md5($key);
 
-        $keyFilePath = $this->storage_path . '/' . $hashedKey;
+        $this->checkKeyExistance($hashedKey);
 
-        $this->checkKeyExistance($keyFilePath);
-
-        $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
+        $props = $this->decodeKeyContent($this->storage->get($hashedKey));
 
         if ($props->endTime <= time()) {
             $props->numberOfHits = 0;
             $props->startedTime = time();
-            $props->endTime = time() + 60;
+            $props->endTime = time() + (int)$props->period;
 
-            file_put_contents($keyFilePath, $this->encodeKeyContent($props));
+            $this->storage->set($hashedKey, $this->encodeKeyContent($props));
         }
 
         return $props->numberOfHits === $props->maximum;
@@ -103,27 +104,25 @@ class RateLimiter
     public function clear(string $key): void
     {
         $hashedKey = md5($key);
-        $keyFilePath = $this->storage_path . '/' . $hashedKey;
 
-        $this->checkKeyExistance($keyFilePath);
+        $this->checkKeyExistance($hashedKey);
 
-        $props = $this->decodeKeyContent(file_get_contents($keyFilePath));
+        $props = $this->decodeKeyContent($this->storage->get($hashedKey));
 
         $props->numberOfHits = 0;
         $props->startedTime = time();
-        $props->endTime = time() + 60;
+        $props->endTime = time() + $props->period;
 
-        file_put_contents($keyFilePath, $this->encodeKeyContent($props));
+        $this->storage->set($hashedKey, $this->encodeKeyContent($props));
     }
 
     public function destroy(string $key): void
     {
         $hashedKey = md5($key);
-        $keyFilePath = $this->storage_path . '/' . $hashedKey;
 
-        $this->checkKeyExistance($keyFilePath);
+        $this->checkKeyExistance($hashedKey);
 
-        unlink($keyFilePath);
+        $this->storage->delete($hashedKey);
     }
 
     /**
@@ -133,23 +132,41 @@ class RateLimiter
      * @return void
      * 
      */
-    private function checkKeyExistance(string $keyFilePath): void
+    private function checkKeyExistance(string $hashedKey): void
     {
-        if (!is_file($keyFilePath)) throw new InvalideRateLimiterException();
+        if ($this->storage->missing($hashedKey)) throw new InvalideRateLimiterException();
     }
 
+    /**
+     * Convert the properties to a string
+     *
+     * @param object $props
+     * 
+     * @return string
+     * 
+     */
     private function encodeKeyContent(object $props): string
     {
         $string = $props->numberOfHits .
             '|' . $props->maximum .
             '|' . $props->startedTime .
-            '|' . $props->endTime;
+            '|' . $props->endTime .
+            '|' . $props->period;
+
         return $string;
     }
 
+    /**
+     * Extract the properties from the string
+     *
+     * @param string $string
+     * 
+     * @return object
+     * 
+     */
     private function decodeKeyContent(string $string): object
     {
-        [$numberOfHits, $maximum, $startedTime, $endTime] = array_map(
+        [$numberOfHits, $maximum, $startedTime, $endTime, $period] = array_map(
             fn ($paramAsString) => intval($paramAsString),
             explode('|', $string)
         );
@@ -159,6 +176,7 @@ class RateLimiter
         $props->maximum = $maximum;
         $props->startedTime = $startedTime;
         $props->endTime = $endTime;
+        $props->period = $period;
 
         return $props;
     }
