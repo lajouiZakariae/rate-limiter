@@ -6,6 +6,7 @@ use Exception;
 use RateLimiter\Exceptions\InvalideRateLimiterException;
 use RateLimiter\Exceptions\TooManyHitsException;
 use RateLimiter\Interfaces\IStorage;
+use RateLimiter\Storage\FileStorage;
 use stdClass;
 
 class RateLimiter
@@ -38,6 +39,15 @@ class RateLimiter
         }
     }
 
+    /**
+     * Register a key with a limit per Hour
+     * 
+     * @param string $key
+     * @param int $perHour
+     * 
+     * @return void
+     * 
+     */
     public function limitHourly(string $key, int $perHour): void
     {
         $this->limit($key, $perHour, 3600);
@@ -62,7 +72,7 @@ class RateLimiter
         if ($props->endTime < time()) {
             $props->numberOfHits = 0;
             $props->startedTime = time();
-            $props->endTime = time() + (int)$props->period;
+            $props->endTime = time() + (int) $props->period;
         };
 
         $props->numberOfHits = $props->numberOfHits + $times;

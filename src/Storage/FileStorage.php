@@ -1,6 +1,6 @@
 <?php
 
-namespace RateLimiter;
+namespace RateLimiter\Storage;
 
 use Exception;
 use RateLimiter\Exceptions\InvalideRateLimiterException;
@@ -74,6 +74,14 @@ class FileStorage implements IStorage
         unlink($this->getKeyFilePath($key));
     }
 
+    /**
+     * Get full path of the key to store
+     *
+     * @param string $key
+     * 
+     * @return string
+     * 
+     */
     private function getKeyFilePath(string $key): string
     {
         return $this->storagePath . (str_ends_with($this->storagePath, '/') ? '' : '/') . $key;
