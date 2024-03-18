@@ -61,7 +61,7 @@ class RateLimiter
      * @return void
      * @throws TooManyHitsException|InvalideRateLimiterException
      */
-    public function hit(string $key, int $times = 0): void
+    public function hit(string $key, int $times = 1): void
     {
         $hashedKey = md5($key);
 

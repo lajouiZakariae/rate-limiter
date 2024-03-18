@@ -2,3 +2,4 @@
 *.log
 storage/cache
 test.php
+tests
