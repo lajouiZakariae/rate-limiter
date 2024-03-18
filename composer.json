@@ -1,6 +1,6 @@
 {
     "name": "lajouizakariae/rate-limiter",
-    "description": "Rate Limiter built with Php",
+    "description": "Rate limiter built with Php",
     "autoload": {
         "psr-4": {
             "RateLimiter\\": "src/"
