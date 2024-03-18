@@ -5,6 +5,12 @@
 This package is a rate limiter that allows you to define a limit per (minute,hour, or any number of seconds)
 It Provides different methods that allow you to define, delete, increment the rate.
 
+## Installation
+
+```
+composer require lajouizakariae/rate-limiter
+```
+
 ## Basic Usage
 
 ```php
