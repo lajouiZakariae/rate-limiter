@@ -1,4 +1,4 @@
-# Rate Limiter Built With PhP
+# Rate Limiter Built With Php
 
 ## Introduction
 
